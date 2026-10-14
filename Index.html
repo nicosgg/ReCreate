@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoCraft - Upcycling & Circular Economy Platform</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        eco: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            500: '#2E7D32', // Forest Green Primary
+                            600: '#1b5e20',
+                            700: '#14532d',
+                            accent: '#4CAF50',
+                            mint: '#E8F5E9',
+                            dark: '#1e293b'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom scrollbar for horizontal chip navigation */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Glassmorphism utilities */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        /* Heart / Kudos Animation */
+        @keyframes kudosPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+        .kudos-anim {
+            animation: kudosPulse 0.3s ease-in-out;
+        }
+
+        /* Confetti Burst CSS Animation */
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.9) translateY(10px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .animate-pop {
+            animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 font-sans text-slate-800 antialiased min-h-screen pb-24 selection:bg-eco-200">
+
+    <div id="app" class="max-w-md mx-auto min-h-screen bg-white shadow-2xl relative overflow-hidden flex flex-col">
+        
+        <!-- ================= TOP HEADER ================= -->
+        <header class="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-100 px-4 py-3">
+            <div class="flex items-center justify-between gap-3">
+                <!-- Logo & Brand -->
+                <div class="flex items-center gap-2">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-eco-500 to-emerald-400 flex items-center justify-center text-white shadow-md shadow-eco-500/20">
+                        <i data-lucide="recycle" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-lg leading-none tracking-tight text-slate-900">Eco<span class="text-eco-500">Craft</span></h1>
+                        <p class="text-[10px] text-slate-400 font-medium">Circular Community Hub</p>
+                    </div>
+                </div>
+
+                <!-- User Level Badge / Impact Coin -->
+                <div class="flex items-center gap-2 bg-eco-mint px-3 py-1.5 rounded-full border border-eco-200">
+                    <i data-lucide="sparkles" class="w-4 h-4 text-amber-500 fill-amber-400"></i>
+                    <span id="user-coins-top" class="text-xs font-bold text-eco-700">350 Eco-Coins</span>
+                </div>
+            </div>
+
+            <!-- Search Bar & Filters (Visible on Explore Tab) -->
+            <div id="search-filter-section" class="mt-3 space-y-2">
+                <div class="relative">
+                    <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                    <input type="text" id="search-input" placeholder="Cari ide upcycling (e.g. Botol, Kardus)..." 
+                        class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-eco-500 focus:bg-white transition-all">
+                </div>
+
+                <!-- Horizontal Filter Chips -->
+                <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 text-xs">
+                    <button onclick="filterCategory('all')" class="chip-btn active px-3 py-1.5 rounded-full font-medium whitespace-nowrap bg-eco-500 text-white shadow-sm transition-all">Semua</button>
+                    <button onclick="filterCategory('plastik')" class="chip-btn px-3 py-1.5 rounded-full font-medium whitespace-nowrap bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all">#Plastik</button>
+                    <button onclick="filterCategory('kardus')" class="chip-btn px-3 py-1.5 rounded-full font-medium whitespace-nowrap bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all">#Kardus</button>
+                    <button onclick="filterCategory('tekstil')" class="chip-btn px-3 py-1.5 rounded-full font-medium whitespace-nowrap bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all">#Tekstil</button>
+                    <button onclick="filterCategory('quick')" class="chip-btn px-3 py-1.5 rounded-full font-medium whitespace-nowrap bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all">⏱️ &lt; 5 Mins</button>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto">
+            
+            <!-- TAB 1: EXPLORE / HOME VIEW -->
+            <section id="tab-explore" class="p-4 space-y-5">
+                
+                <!-- Hero Featured Project Card -->
+                <div onclick="openTutorial(featuredProject)" class="relative rounded-2xl overflow-hidden shadow-lg border border-slate-100 bg-slate-900 group cursor-pointer">
+                    <img src="https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=800&q=80" alt="Hero Project" class="w-full h-52 object-cover opacity-80 group-hover:scale-105 transition-transform duration-500">
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-transparent p-4 flex flex-col justify-end">
+                        <div class="flex items-center gap-2 mb-1.5">
+                            <span class="bg-amber-400 text-slate-900 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                                <i data-lucide="zap" class="w-3 h-3 fill-slate-900"></i> Rekomendasi Hari Ini
+                            </span>
+                            <span class="bg-eco-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">+50 Eco-XP</span>
+                        </div>
+                        <h2 class="text-white font-bold text-lg leading-tight mb-1">Pot Tanaman Gantung dari Botol Plastik Bekas</h2>
+                        <div class="flex items-center gap-3 text-slate-300 text-xs">
+                            <span class="flex items-center gap-1"><i data-lucide="clock" class="w-3.5 h-3.5 text-eco-200"></i> 4 Menit</span>
+                            <span class="flex items-center gap-1"><i data-lucide="bar-chart-2" class="w-3.5 h-3.5 text-eco-200"></i> Mudah</span>
+                            <span class="flex items-center gap-1"><i data-lucide="leaf" class="w-3.5 h-3.5 text-eco-200"></i> Plastik</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section Header -->
+                <div class="flex items-center justify-between pt-1">
+                    <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                        <i data-lucide="compass" class="w-4 h-4 text-eco-500"></i>
+                        Eksplorasi Ide Upcycling
+                    </h3>
+                    <span class="text-xs text-slate-400 font-medium">Bite-sized Ideas</span>
+                </div>
+
+                <!-- Dynamic Content Grid -->
+                <div id="ideas-grid" class="grid grid-cols-2 gap-3">
+                    <!-- Cards rendered via JS -->
+                </div>
+            </section>
+
+            <section id="tab-tutorial" class="hidden p-4 space-y-4">
+                
+                <!-- Back Button & Breadcrumb -->
+                <button onclick="switchTab('explore')" class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition-all">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i> Kembali ke Eksplor
+                </button>
+
+                <!-- Tutorial Header Summary Bar -->
+                <div class="bg-gradient-to-br from-eco-50 to-emerald-100/50 rounded-2xl p-4 border border-eco-200/60 shadow-sm space-y-3">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span id="tut-category-badge" class="bg-eco-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">#Plastik</span>
+                            <h2 id="tut-title" class="font-bold text-lg text-slate-900 mt-1">Pot Tanaman Gantung</h2>
+                        </div>
+                        <span id="tut-xp-badge" class="bg-amber-100 text-amber-800 text-xs font-bold px-1.5 py-1 rounded-full border border-amber-200 flex items-center gap-1">
+                            <i data-lucide="award" class="w-3.5 h-3.5 text-amber-600"></i> +50 XP
+                        </span>
+                    </div>
+
+                    <!-- Environmental Impact & Effort Metrics -->
+                    <div class="grid grid-cols-3 gap-2 bg-white/80 rounded-xl p-2.5 border border-eco-100 text-center">
+                        <div>
+                            <p class="text-[10px] text-slate-400 font-medium">Estimasi Waktu</p>
+                            <p id="tut-duration" class="text-xs font-bold text-slate-800 flex items-center justify-center gap-1 mt-0.5">
+                                <i data-lucide="clock" class="w-3 h-3 text-eco-500"></i> 4 Mins
+                            </p>
+                        </div>
+                        <div class="border-x border-slate-100">
+                            <p class="text-[10px] text-slate-400 font-medium">Tingkat Kesulitan</p>
+                            <p id="tut-difficulty" class="text-xs font-bold text-slate-800 flex items-center justify-center gap-1 mt-0.5">
+                                <i data-lucide="gauge" class="w-3 h-3 text-eco-500"></i> Mudah
+                            </p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-slate-400 font-medium">CO2 Dicegah</p>
+                            <p id="tut-co2" class="text-xs font-bold text-emerald-600 flex items-center justify-center gap-1 mt-0.5">
+                                <i data-lucide="leaf" class="w-3 h-3 text-emerald-500"></i> ~0.2 kg
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Materials Needed Chips -->
+                    <div>
+                        <p class="text-xs font-semibold text-slate-700 mb-1.5 flex items-center gap-1">
+                            <i data-lucide="wrench" class="w-3.5 h-3.5 text-eco-500"></i> Alat & Bahan:
+                        </p>
+                        <div id="tut-materials-list" class="flex flex-wrap gap-1.5">
+                            <!-- Injected by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step-by-Step Interactive Micro-Learning Card -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-md p-4 space-y-3 relative">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-eco-600 uppercase tracking-wider flex items-center gap-1">
+                            <i data-lucide="layers" class="w-3.5 h-3.5"></i> Langkah <span id="current-step-num">1</span> Dari <span id="total-steps-num">3</span>
+                        </span>
+                        <div class="flex gap-1" id="step-dots-container">
+                            <!-- Indicators injected by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Step Image Container -->
+                    <div class="relative h-48 rounded-xl overflow-hidden bg-slate-100 border border-slate-100">
+                        <img id="step-img" src="" alt="Langkah Tutorial" class="w-full h-full object-cover transition-all duration-300">
+                    </div>
+
+                    <!-- Instruction Text -->
+                    <p id="step-desc" class="text-sm text-slate-700 font-medium leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-100">
+                        Loading instruksi...
+                    </p>
+
+                    <!-- Carousel Controls -->
+                    <div class="flex items-center justify-between pt-2">
+                        <button id="prev-step-btn" onclick="changeStep(-1)" class="px-3 py-2 rounded-xl border border-slate-200 text-slate-600 text-xs font-bold flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed">
+                            <i data-lucide="chevron-left" class="w-4 h-4"></i> Sebelum
+                        </button>
+                        <button id="next-step-btn" onclick="changeStep(1)" class="px-4 py-2 rounded-xl bg-eco-500 text-white text-xs font-bold flex items-center gap-1 shadow-md shadow-eco-500/20">
+                            Berikut <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Proof of Action Bottom CTA -->
+                <div class="pt-2">
+                    <button onclick="openUploadModalWithTutorial()" class="w-full py-3.5 px-4 bg-gradient-to-r from-eco-500 to-emerald-600 text-white font-bold text-sm rounded-2xl shadow-lg shadow-eco-500/30 flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] transition-all">
+                        <i data-lucide="camera" class="w-5 h-5"></i>
+                        🚀 Saya Sudah Buat! (Klaim Eco-XP)
+                    </button>
+                </div>
+            </section>
+
+            <section id="tab-community" class="hidden p-4 space-y-5">
+                
+                <!-- User Impact Profile Stats Header -->
+                <div class="bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-2xl p-4 shadow-xl space-y-4">
+                    <div class="flex items-center gap-3">
+                        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80" alt="User Avatar" class="w-12 h-12 rounded-full border-2 border-eco-500 object-cover">
+                        <div>
+                            <h3 class="font-bold text-base flex items-center gap-1.5">
+                                Sarah Amalia
+                                <span class="bg-eco-500 text-[9px] text-white font-extrabold px-1.5 py-0.5 rounded-full">Pro Crafter</span>
+                            </h3>
+                            <p class="text-xs text-slate-300">Pahlawan Daur Ulang Mandiri</p>
+                        </div>
+                    </div>
+
+                    <!-- Stats Counter Bar -->
+                    <div class="grid grid-cols-3 gap-2 bg-white/10 backdrop-blur-md rounded-xl p-3 text-center border border-white/10">
+                        <div>
+                            <p class="text-[10px] text-slate-400">Total Limbah</p>
+                            <p id="user-total-weight" class="text-sm font-extrabold text-eco-200 mt-0.5">14.2 kg</p>
+                        </div>
+                        <div class="border-x border-white/10">
+                            <p class="text-[10px] text-slate-400">Hari Beruntun</p>
+                            <p class="text-sm font-extrabold text-amber-400 flex items-center justify-center gap-1 mt-0.5">
+                                🔥 7 Hari
+                            </p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-slate-400">Aksi Sukses</p>
+                            <p id="user-action-count" class="text-sm font-extrabold text-emerald-300 mt-0.5">18 Kreasi</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Community Feed Section Header -->
+                <div class="flex items-center justify-between">
+                    <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                        <i data-lucide="users" class="w-4 h-4 text-eco-500"></i>
+                        Aksi Nyata Komunitas (UGC)
+                    </h3>
+                    <span class="text-xs text-eco-600 font-medium">Real-time Feed</span>
+                </div>
+
+                <!-- Social Proof-of-Action Feed -->
+                <div id="community-feed" class="space-y-4">
+                    <!-- Feed items dynamically rendered by JS -->
+                </div>
+            </section>
+        </main>
+
+        <div id="upload-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center hidden p-0 sm:p-4">
+            <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 space-y-4 animate-pop max-h-[90vh] overflow-y-auto">
+                <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                    <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                        <i data-lucide="camera" class="w-5 h-5 text-eco-500"></i>
+                        Unggah Bukti Aksi Upcycling
+                    </h3>
+                    <button onclick="closeUploadModal()" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <form id="upload-form" onsubmit="handleFormSubmit(event)" class="space-y-3">
+                    <!-- Photo Upload Area -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Foto Hasil Kreasi / Aksi Daur Ulang</label>
+                        <div onclick="document.getElementById('file-input').click()" class="border-2 border-dashed border-slate-200 rounded-2xl p-6 text-center cursor-pointer hover:border-eco-500 hover:bg-eco-50/50 transition-all">
+                            <i data-lucide="upload-cloud" class="w-8 h-8 mx-auto text-eco-500 mb-2"></i>
+                            <p id="upload-placeholder-text" class="text-xs font-medium text-slate-600">Klik untuk mengambil foto atau unggah galeri</p>
+                            <p class="text-[10px] text-slate-400 mt-0.5">Format JPG/PNG maks 5MB</p>
+                            <input type="file" id="file-input" accept="image/*" class="hidden" onchange="previewUploadImage(event)">
+                        </div>
+                        <img id="image-preview" src="" class="hidden w-full h-40 object-cover rounded-2xl mt-2 border border-slate-200">
+                    </div>
+
+                    <!-- Title & Description -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Judul / Catatan Singkat</label>
+                        <input type="text" id="action-title" required placeholder="Contoh: Berhasil buat pot botol bekas minyak!" 
+                            class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-eco-500">
+                    </div>
+
+                    <!-- Material Type & Weight -->
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Bahan Didaur Ulang</label>
+                            <select id="action-material" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-eco-500">
+                                <option value="Plastik">Plastik (#Plastik)</option>
+                                <option value="Kardus">Kardus (#Kardus)</option>
+                                <option value="Tekstil">Tekstil (#Tekstil)</option>
+                                <option value="Kaca">Kaca / Logam</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Perkiraan Berat (kg)</label>
+                            <input type="number" id="action-weight" step="0.1" value="0.3" required 
+                                class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-eco-500">
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="w-full py-3 bg-eco-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-eco-500/20 hover:bg-eco-600 transition-all flex items-center justify-center gap-2">
+                        <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                        Kirim Aksi & Klaim Reward (+50 Eco-Coins)
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white/95 backdrop-blur-md border-t border-slate-200/80 py-2 px-6 flex items-center justify-between z-40">
+            <!-- Tab 1: Explore -->
+            <button onclick="switchTab('explore')" id="nav-explore" class="nav-btn flex flex-col items-center gap-1 text-eco-500 transition-all">
+                <i data-lucide="compass" class="w-5 h-5"></i>
+                <span class="text-[10px] font-bold">Eksplor</span>
+            </button>
+
+            <!-- Floating Action Center Button (Upload) -->
+            <button onclick="openUploadModal()" class="w-12 h-12 rounded-full bg-gradient-to-tr from-eco-500 to-emerald-400 text-white shadow-lg shadow-eco-500/40 flex items-center justify-center -mt-5 hover:scale-105 active:scale-95 transition-all">
+                <i data-lucide="plus" class="w-6 h-6 stroke-[2.5]"></i>
+            </button>
+
+            <!-- Tab 3: Community -->
+            <button onclick="switchTab('community')" id="nav-community" class="nav-btn flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 transition-all">
+                <i data-lucide="users" class="w-5 h-5"></i>
+                <span class="text-[10px] font-bold">Komunitas</span>
+            </button>
+        </nav>
+
+    </div>
+
+    <script>
+        // ================= GLOBAL APPLICATION STATE =================
+        let userState = {
+            coins: 350,
+            xp: 120,
+            totalWeight: 14.2,
+            actionsCount: 18
+        };
+
+        // Sample Upcycling Projects Data
+        const projectsData = [
+            {
+                id: 1,
+                title: "Pot Tanaman Gantung Botol Plastik",
+                category: "plastik",
+                categoryLabel: "#Plastik",
+                duration: "4 Mins",
+                difficulty: "Mudah",
+                co2: "0.2 kg",
+                xp: 50,
+                materials: ["Botol Plastik Bekas", "Gunting", "Tali Kasur", "Cat Akrilik"],
+                image: "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=600&q=80",
+                author: "Rina Eco",
+                steps: [
+                    {
+                        num: 1,
+                        image: "https://kadujayaperkasa.com/images/blog/6053a-cuci%20botol.jpg",
+                        desc: "Bersihkan botol plastik bekas minuman. Potong bagian tengah botol secara memanjang menggunakan gunting."
+                    },
+                    {
+                        num: 2,
+                        image: "https://images.unsplash.com/photo-1512428559087-560fa5ceab42?auto=format&fit=crop&w=600&q=80",
+                        desc: "Buat 3-4 lubang kecil di bagian bawah botol untuk resapan air tanaman agar akar tidak membusuk."
+                    },
+                    {
+                        num: 3,
+                        image: "https://images.unsplash.com/photo-1485955900006-10f4d324d411?auto=format&fit=crop&w=600&q=80",
+                        desc: "Ikat tali pada kedua ujung botol, masukkan tanah & tanaman hias kecil. Pot gantung gantung siap dipajang!"
+                    }
+                ]
+            },
+            {
+                id: 2,
+                title: "Organizer Meja dari Dus Sepatu",
+                category: "kardus",
+                categoryLabel: "#Kardus",
+                duration: "5 Mins",
+                difficulty: "Mudah",
+                co2: "0.4 kg",
+                xp: 60,
+                materials: ["Kardus Bekas", "Penggaris", "Lem Paper", "Kertas Kado"],
+                image: "https://images.unsplash.com/photo-1589939705384-5185137a7f0f?auto=format&fit=crop&w=600&q=80",
+                author: "Budi DIY",
+                steps: [
+                    {
+                        num: 1,
+                        image: "https://images.unsplash.com/photo-1589939705384-5185137a7f0f?auto=format&fit=crop&w=600&q=80",
+                        desc: "Potong bagian atas kardus bekas sepatu dan bagi area dalam menjadi 3 sekat menggunakan potongan kardus sisa."
+                    },
+                    {
+                        num: 2,
+                        image: "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=600&q=80",
+                        desc: "Lapisi seluruh bagian luar kardus menggunakan kertas kado bekas atau koran agar terlihat estetis."
+                    }
+                ]
+            },
+            {
+                id: 3,
+                title: "Lap Baju/Totebag Kaos Bekas (No-Sew)",
+                category: "tekstil",
+                categoryLabel: "#Tekstil",
+                duration: "3 Mins",
+                difficulty: "Sangat Mudah",
+                co2: "0.8 kg",
+                xp: 40,
+                materials: ["Kaos Bekas Tidak Terpakai", "Gunting Kain"],
+                image: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=600&q=80",
+                author: "Maya Green",
+                steps: [
+                    {
+                        num: 1,
+                        image: "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=600&q=80",
+                        desc: "Gunting bagian lengan dan kerah kaos bekas untuk membuat lubang pegangan tas."
+                    },
+                    {
+                        num: 2,
+                        image: "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=600&q=80",
+                        desc: "Gunting rumbai di bagian bawah kaos lalu ikat kencang pasangan rumbai tersebut. Tas belanja tanpa jahit siap dipakai!"
+                    }
+                ]
+            },
+                        {
+                id: 4,
+                title: "Vas Bunga dari Toples Kaca Bekas",
+                category: "kaca",
+                categoryLabel: "#Kaca",
+                duration: "4 Mins",
+                difficulty: "Mudah",
+                co2: "0.3 kg",
+                xp: 45,
+                materials: [
+                    "Toples Kaca Bekas",
+                    "Tali Rami",
+                    "Lem Kerajinan",
+                    "Cat Akrilik (Opsional)"
+                ],
+                image: "https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?auto=format&fit=crop&w=600&q=80",
+                author: "Dina Upcycle",
+                steps: [
+                    {
+                        num: 1,
+                        image: "https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?auto=format&fit=crop&w=600&q=80",
+                        desc: "Cuci dan keringkan toples kaca bekas hingga bersih. Pastikan tidak ada retakan atau bagian kaca yang tajam."
+                    },
+                    {
+                        num: 2,
+                        image: "https://images.unsplash.com/photo-1490312278390-ab64016e0aa9?auto=format&fit=crop&w=600&q=80",
+                        desc: "Lilitkan tali rami pada bagian luar toples menggunakan lem kerajinan. Tambahkan dekorasi sesuai kreativitasmu."
+                    },
+                    {
+                        num: 3,
+                        image: "https://images.unsplash.com/photo-1497250681960-ef046c08a56e?auto=format&fit=crop&w=600&q=80",
+                        desc: "Setelah lem mengering, masukkan bunga segar atau bunga kering ke dalam toples. Vas bunga daur ulang siap mempercantik ruangan."
+                    }
+                ]
+            },
+            {
+                id: 5,
+                title: "Tempat Pensil dari Kaleng Bekas",
+                category: "logam",
+                categoryLabel: "#Logam",
+                duration: "3 Mins",
+                difficulty: "Sangat Mudah",
+                co2: "0.25 kg",
+                xp: 35,
+                materials: [
+                    "Kaleng Bekas",
+                    "Kertas Kado Bekas",
+                    "Lem Kerajinan",
+                    "Pita Dekorasi"
+                ],
+                image: "https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=600&q=80",
+                author: "Andi Recycle",
+                steps: [
+                    {
+                        num: 1,
+                        image: "https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=600&q=80",
+                        desc: "Bersihkan kaleng bekas hingga tidak ada sisa makanan. Pastikan bagian tepinya aman dan tidak tajam sebelum digunakan."
+                    },
+                    {
+                        num: 2,
+                        image: "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?auto=format&fit=crop&w=600&q=80",
+                        desc: "Ukur kertas kado bekas sesuai ukuran kaleng, kemudian potong secukupnya untuk menutupi bagian luar."
+                    },
+                    {
+                        num: 3,
+                        image: "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?auto=format&fit=crop&w=600&q=80",
+                        desc: "Rekatkan kertas pada kaleng dan tambahkan pita sebagai hiasan. Tempat pensil siap digunakan untuk menyimpan alat tulis."
+                    }
+                ]
+            },
+            {
+                id: 6,
+                title: "Pot Bibit Tanaman dari Cangkang Telur",
+                category: "organik",
+                categoryLabel: "#Organik",
+                duration: "2 Mins",
+                difficulty: "Sangat Mudah",
+                co2: "0.1 kg",
+                xp: 30,
+                materials: [
+                    "Cangkang Telur Bersih",
+                    "Tanah atau Media Tanam",
+                    "Biji Tanaman",
+                    "Sendok Kecil"
+                ],
+                image: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=600&q=80",
+                author: "Nadia Green",
+                steps: [
+                    {
+                        num: 1,
+                        image: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=600&q=80",
+                        desc: "Bersihkan cangkang telur dengan hati-hati dan sisakan sebagian besar bentuk cangkang agar dapat digunakan sebagai wadah bibit."
+                    },
+                    {
+                        num: 2,
+                        image: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=600&q=80",
+                        desc: "Masukkan sedikit media tanam ke dalam cangkang telur, lalu letakkan satu atau dua biji tanaman di atasnya."
+                    },
+                    {
+                        num: 3,
+                        image: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=600&q=80",
+                        desc: "Siram dengan sedikit air dan letakkan di tempat yang mendapat cahaya sesuai kebutuhan tanaman. Ketika bibit tumbuh, pindahkan ke pot atau tanah yang lebih besar."
+                    }
+                ]
+            }
+            
+        ];
+
+        // Featured Project shortcut
+        const featuredProject = projectsData[0];
+
+        // Initial Community Feed Items
+        let communityFeedData = [
+            {
+                id: 101,
+                user: "Dimas Prasetyo",
+                avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80",
+                title: "Daur ulang botol oli bekas jadi tempat alat pertukangan!",
+                image: "https://images.unsplash.com/photo-1581783342308-f792dbdd27c5?auto=format&fit=crop&w=600&q=80",
+                time: "10 menit yang lalu",
+                kudos: 24,
+                userLiked: false,
+                comments: 5,
+                material: "Plastik"
+            },
+            {
+                id: 102,
+                user: "Anisa Rahma",
+                avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80",
+                title: "Selesai bikin tempat pensil dari kaleng bekas susu. Hemat & Lucu!",
+                image: "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=600&q=80",
+                time: "1 jam yang lalu",
+                kudos: 42,
+                userLiked: true,
+                comments: 8,
+                material: "Kaca / Logam"
+            }
+        ];
+
+        // Active Tutorial State
+        let activeTutorial = null;
+        let currentStepIndex = 0;
+
+        window.onload = function() {
+            lucide.createIcons();
+            renderIdeasGrid(projectsData);
+            renderCommunityFeed();
+        };
+
+        // Render Cards in Explore Tab Grid
+        function renderIdeasGrid(items) {
+            const grid = document.getElementById('ideas-grid');
+            grid.innerHTML = items.map(p => `
+                <div onclick="openTutorialById(${p.id})" class="bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-sm hover:shadow-md transition-all cursor-pointer flex flex-col justify-between group">
+                    <div>
+                        <div class="relative h-28 overflow-hidden bg-slate-100">
+                            <img src="${p.image}" alt="${p.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                            <span class="absolute top-2 right-2 bg-slate-900/70 backdrop-blur-md text-white text-[9px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                                <i data-lucide="clock" class="w-2.5 h-2.5"></i> ${p.duration}
+                            </span>
+                        </div>
+                        <div class="p-3 space-y-1">
+                            <span class="text-[9px] font-extrabold text-eco-600 bg-eco-50 px-2 py-0.5 rounded-md uppercase">${p.categoryLabel}</span>
+                            <h4 class="font-bold text-xs text-slate-800 line-clamp-2 leading-snug">${p.title}</h4>
+                        </div>
+                    </div>
+                    <div class="px-3 pb-3 pt-1 flex items-center justify-between text-[10px] text-slate-400 border-t border-slate-50">
+                        <span class="font-medium text-slate-600">${p.author}</span>
+                        <span class="text-amber-600 font-bold">+${p.xp} XP</span>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        // Filter Content by Category Chips
+        function filterCategory(cat) {
+            // Update active chip UI
+            document.querySelectorAll('.chip-btn').forEach(btn => {
+                btn.classList.remove('bg-eco-500', 'text-white');
+                btn.classList.add('bg-slate-100', 'text-slate-600');
+            });
+            event.target.classList.remove('bg-slate-100', 'text-slate-600');
+            event.target.classList.add('bg-eco-500', 'text-white');
+
+            if (cat === 'all') {
+                renderIdeasGrid(projectsData);
+            } else if (cat === 'quick') {
+                renderIdeasGrid(projectsData.filter(p => parseInt(p.duration) <= 4));
+            } else {
+                renderIdeasGrid(projectsData.filter(p => p.category === cat));
+            }
+        }
+
+        // Tab Navigation Switcher
+        function switchTab(tabName) {
+            document.getElementById('tab-explore').classList.add('hidden');
+            document.getElementById('tab-tutorial').classList.add('hidden');
+            document.getElementById('tab-community').classList.add('hidden');
+
+            document.getElementById('search-filter-section').style.display = (tabName === 'explore') ? 'block' : 'none';
+
+            // Reset Nav Icons Style
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('text-eco-500');
+                btn.classList.add('text-slate-400');
+            });
+
+            if (tabName === 'explore') {
+                document.getElementById('tab-explore').classList.remove('hidden');
+                document.getElementById('nav-explore').classList.add('text-eco-500');
+            } else if (tabName === 'tutorial') {
+                document.getElementById('tab-tutorial').classList.remove('hidden');
+            } else if (tabName === 'community') {
+                document.getElementById('tab-community').classList.remove('hidden');
+                document.getElementById('nav-community').classList.add('text-eco-500');
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Open Tutorial View
+        function openTutorialById(id) {
+            const project = projectsData.find(p => p.id === id);
+            if (project) openTutorial(project);
+        }
+
+        function openTutorial(project) {
+            activeTutorial = project;
+            currentStepIndex = 0;
+
+            document.getElementById('tut-title').innerText = project.title;
+            document.getElementById('tut-category-badge').innerText = project.categoryLabel;
+            document.getElementById('tut-duration').innerHTML = `<i data-lucide="clock" class="w-3 h-3 text-eco-500"></i> ${project.duration}`;
+            document.getElementById('tut-difficulty').innerHTML = `<i data-lucide="gauge" class="w-3 h-3 text-eco-500"></i> ${project.difficulty}`;
+            document.getElementById('tut-co2').innerHTML = `<i data-lucide="leaf" class="w-3 h-3 text-emerald-500"></i> ${project.co2}`;
+            document.getElementById('tut-xp-badge').innerHTML = `<i data-lucide="award" class="w-3.5 h-3.5 text-amber-600"></i> +${project.xp} XP`;
+
+            // Render Materials
+            const matContainer = document.getElementById('tut-materials-list');
+            matContainer.innerHTML = project.materials.map(m => `
+                <span class="text-[10px] bg-white text-slate-600 font-medium px-2 py-0.5 rounded-md border border-slate-200">${m}</span>
+            `).join('');
+
+            updateStepCarousel();
+            switchTab('tutorial');
+        }
+
+        // Carousel Navigation for Micro-Learning
+        function updateStepCarousel() {
+            if (!activeTutorial) return;
+            const step = activeTutorial.steps[currentStepIndex];
+            const total = activeTutorial.steps.length;
+
+            document.getElementById('current-step-num').innerText = currentStepIndex + 1;
+            document.getElementById('total-steps-num').innerText = total;
+            document.getElementById('step-img').src = step.image;
+            document.getElementById('step-desc').innerText = step.desc;
+
+            // Render Progress Dots
+            const dotsContainer = document.getElementById('step-dots-container');
+            dotsContainer.innerHTML = activeTutorial.steps.map((_, i) => `
+                <div class="h-1.5 rounded-full transition-all ${i === currentStepIndex ? 'w-5 bg-eco-500' : 'w-1.5 bg-slate-200'}"></div>
+            `).join('');
+
+            // Button Disable States
+            document.getElementById('prev-step-btn').disabled = (currentStepIndex === 0);
+            document.getElementById('next-step-btn').disabled = (currentStepIndex === total - 1);
+
+            lucide.createIcons();
+        }
+
+        function changeStep(dir) {
+            currentStepIndex += dir;
+            updateStepCarousel();
+        }
+
+        // Render Community Social Feed
+        function renderCommunityFeed() {
+            const container = document.getElementById('community-feed');
+            container.innerHTML = communityFeedData.map(post => `
+                <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden space-y-3 p-3.5">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2.5">
+                            <img src="${post.avatar}" alt="${post.user}" class="w-9 h-9 rounded-full object-cover border border-slate-200">
+                            <div>
+                                <h4 class="font-bold text-xs text-slate-800">${post.user}</h4>
+                                <p class="text-[10px] text-slate-400">${post.time} • <span class="text-eco-600 font-semibold">#${post.material}</span></p>
+                            </div>
+                        </div>
+                        <span class="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-200">Verified Action</span>
+                    </div>
+
+                    <p class="text-xs text-slate-700 font-medium leading-relaxed">${post.title}</p>
+
+                    <div class="rounded-xl overflow-hidden h-48 bg-slate-100">
+                        <img src="${post.image}" alt="Community Work" class="w-full h-full object-cover">
+                    </div>
+
+                    <div class="flex items-center justify-between pt-1 border-t border-slate-100 text-xs text-slate-500">
+                        <button onclick="toggleKudos(${post.id})" class="flex items-center gap-1.5 font-semibold ${post.userLiked ? 'text-eco-600' : 'text-slate-500'} hover:text-eco-600 transition-all">
+                            <span class="${post.userLiked ? 'kudos-anim' : ''}">🌿</span>
+                            <span>${post.kudos} Eco-Kudos</span>
+                        </button>
+                        <span class="flex items-center gap-1 text-slate-400">
+                            <i data-lucide="message-circle" class="w-4 h-4"></i> ${post.comments} Komentar
+                        </span>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        // Toggle Social Kudos Reaction
+        function toggleKudos(postId) {
+            const post = communityFeedData.find(p => p.id === postId);
+            if (post) {
+                if (post.userLiked) {
+                    post.kudos--;
+                    post.userLiked = false;
+                } else {
+                    post.kudos++;
+                    post.userLiked = true;
+                }
+                renderCommunityFeed();
+            }
+        }
+
+        // Modal Handlers
+        function openUploadModal() {
+            document.getElementById('upload-modal').classList.remove('hidden');
+        }
+
+        function openUploadModalWithTutorial() {
+            if (activeTutorial) {
+                document.getElementById('action-title').value = `Selesai membuat: ${activeTutorial.title}`;
+            }
+            openUploadModal();
+        }
+
+        function closeUploadModal() {
+            document.getElementById('upload-modal').classList.add('hidden');
+        }
+
+        function previewUploadImage(event) {
+            const reader = new FileReader();
+            reader.onload = function() {
+                const preview = document.getElementById('image-preview');
+                preview.src = reader.result;
+                preview.classList.remove('hidden');
+                document.getElementById('upload-placeholder-text').innerText = "Foto terpilih!";
+            }
+            if (event.target.files[0]) reader.readAsDataURL(event.target.files[0]);
+        }
+
+        // Handle Proof-of-Action Form Submission
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const title = document.getElementById('action-title').value;
+            const material = document.getElementById('action-material').value;
+            const weight = parseFloat(document.getElementById('action-weight').value) || 0.3;
+            const previewSrc = document.getElementById('image-preview').src || "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=600&q=80";
+
+            // Update user impact stats
+            userState.coins += 50;
+            userState.totalWeight = (parseFloat(userState.totalWeight) + weight).toFixed(1);
+            userState.actionsCount++;
+
+            document.getElementById('user-coins-top').innerText = `${userState.coins} Eco-Coins`;
+            document.getElementById('user-total-weight').innerText = `${userState.totalWeight} kg`;
+            document.getElementById('user-action-count').innerText = `${userState.actionsCount} Kreasi`;
+
+            // Add new UGC post to community feed
+            communityFeedData.unshift({
+                id: Date.now(),
+                user: "Sarah Amalia",
+                avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
+                title: title,
+                image: previewSrc,
+                time: "Baru saja",
+                kudos: 1,
+                userLiked: true,
+                comments: 0,
+                material: material
+            });
+
+            closeUploadModal();
+            renderCommunityFeed();
+            switchTab('community');
+
+            // Reset form
+            document.getElementById('upload-form').reset();
+            document.getElementById('image-preview').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
+```
